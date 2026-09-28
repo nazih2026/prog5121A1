@@ -1,4 +1,9 @@
 package com.mycompany.prog5121a1;
+/*
+ * LoginTest class - Part 1 of the Chat App PoE.
+ * Contains 16 JUnit tests covering registration validation,
+ * login authentication, and username/password/cell phone checks.
+ */
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
