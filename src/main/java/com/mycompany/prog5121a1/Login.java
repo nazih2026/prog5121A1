@@ -97,3 +97,15 @@ public class Login {
         return "Username or password incorrect, please try again.";
     }
 
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getStoredUsername() {
+        return storedUsername;
+    }
+}
