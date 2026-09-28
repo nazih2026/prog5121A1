@@ -1,4 +1,8 @@
 package com.mycompany.prog5121a1;
+/*
+ * Main class - console entry point for the Chat App PoE.
+ * Handles user input and program flow.
+ */
 
 import java.util.Scanner;
 
