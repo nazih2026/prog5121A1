@@ -1,5 +1,10 @@
 package com.mycompany.prog5121a1;
 
+/*
+ * Login class - Part 1 of the Chat App PoE.
+ * Handles user registration validation and login authentication.
+ */
+
 /**
  * Login class handles user registration and login validation.
  *
