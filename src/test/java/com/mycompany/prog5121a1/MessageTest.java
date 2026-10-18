@@ -73,7 +73,7 @@ public class MessageTest {
             "Hello there, see you later",
             "Good morning team"
         };
-        String[] expectedEnds = {":HITONIGHT", ":HELLOLATER", ":GOODMORNING"};
+        String[] expectedEnds = {":HITONIGHT", ":HELLOLATER", ":GOODTEAM"};
 
         for (int i = 0; i < messages.length; i++) {
             Message msg = new Message("+27718693002", messages[i], i);
