@@ -14,5 +14,13 @@
     "messageText": "Test message",
     "messageHash": "41:0:TESTMESSAGE",
     "flag": "STORED"
+  },
+  {
+    "messageID": "3095836586",
+    "messageNumber": 0,
+    "recipient": "+27718693002",
+    "messageText": "Test message",
+    "messageHash": "30:0:TESTMESSAGE",
+    "flag": "STORED"
   }
 ]
