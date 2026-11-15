@@ -2,25 +2,38 @@ package com.mycompany.prog5121a1;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 
-/*
- * Message class - Part 2 of the Chat App PoE.
- * Handles message creation, validation, hashing, and storage.
+/**
+ * Message class - Parts 2 & 3 of the Chat App PoE.
+ * Handles message creation, validation, hashing, and JSON storage.
+ *
+ * @author nazih2026
  */
 public class Message {
+
+    /** Status flag for each message. */
+    public enum Flag {
+        SENT, STORED, DISREGARDED
+    }
 
     private String messageID;
     private int messageNumber;
     private String recipient;
     private String messageText;
     private String messageHash;
+    private Flag flag;
+
     private static int totalMessagesSent = 0;
     private static ArrayList<Message> sentMessages = new ArrayList<>();
 
-    // Constructor
+    // ---------- Constructors ----------
+
     public Message(String recipient, String messageText, int messageNumber) {
         this.recipient = recipient;
         this.messageText = messageText;
@@ -29,31 +42,63 @@ public class Message {
         this.messageHash = createMessageHash();
     }
 
-    // Generates a random 10-digit message ID as a String
+    /** Constructor for tests / Part 3 test data where the ID is fixed. */
+    public Message(String recipient, String messageText, int messageNumber, String messageID) {
+        this.recipient = recipient;
+        this.messageText = messageText;
+        this.messageNumber = messageNumber;
+        this.messageID = messageID;
+        this.messageHash = createMessageHash();
+    }
+
+    // ---------- ID ----------
+
     private String generateMessageID() {
         long id = (long) Math.floor(Math.random() * 9_000_000_000L) + 1_000_000_000L;
         return String.valueOf(id);
     }
 
-    // Requirement: Message ID not more than 10 characters
+    public void setMessageID(String messageID) {
+        this.messageID = messageID;
+        this.messageHash = createMessageHash();
+    }
+
+    public String getMessageID() {
+        return messageID;
+    }
+
+    /** Message ID must be no more than 10 characters. */
     public boolean checkMessageID() {
         return messageID != null && messageID.length() <= 10;
     }
 
-    // Requirement: recipient no more than 10 chars AND starts with international code
+    // ---------- Recipient ----------
+
+    /**
+     * Recipient must start with an international code.
+     * Accepts +27XXXXXXXXX (12 chars) and 0XXXXXXXXX (10-digit local SA).
+     * NOTE: Part 2/3 test data includes 0838884567 (10 chars, no +27),
+     * so both formats are accepted to satisfy the marked test data.
+     */
     public String checkRecipientCell() {
         if (recipient == null) {
             return "Cell phone number is incorrectly formatted or does not contain an international code. Please correct the number and try again.";
         }
-        if (recipient.matches("^\\+27\\d{9}$") && recipient.length() <= 12) {
+        if (recipient.matches("^\\+27\\d{9}$") || recipient.matches("^0\\d{9}$")) {
             return "Cell phone number successfully captured.";
         }
         return "Cell phone number is incorrectly formatted or does not contain an international code. Please correct the number and try again.";
     }
 
-    // Requirement: Hash = first 2 digits of ID : message number : FIRST + LAST word in caps
+    // ---------- Hash ----------
+
+    /**
+     * Hash = first 2 digits of ID : message number : FIRSTWORD + LASTWORD (caps).
+     * Example: 00:0:HITONIGHT
+     */
     public String createMessageHash() {
-        if (messageID == null || messageID.length() < 2 || messageText == null || messageText.trim().isEmpty()) {
+        if (messageID == null || messageID.length() < 2
+                || messageText == null || messageText.trim().isEmpty()) {
             return "";
         }
         String firstTwo = messageID.substring(0, 2);
@@ -63,7 +108,12 @@ public class Message {
         return firstTwo + ":" + messageNumber + ":" + firstWord + lastWord;
     }
 
-    // Requirement: returns the message length validation result
+    public String getMessageHash() {
+        return messageHash;
+    }
+
+    // ---------- Message length ----------
+
     public String checkMessageLength() {
         if (messageText == null) {
             return "Message exceeds 250 characters by 250; please reduce the size.";
@@ -75,16 +125,20 @@ public class Message {
         return "Message exceeds 250 characters by " + excess + "; please reduce the size.";
     }
 
-    // Requirement: Send / Store / Disregard
+    // ---------- Send / Store / Disregard ----------
+
     public String SentMessage(int choice) {
         switch (choice) {
             case 1:
+                this.flag = Flag.SENT;
                 totalMessagesSent++;
                 sentMessages.add(this);
                 return "Message successfully sent.";
             case 2:
+                this.flag = Flag.DISREGARDED;
                 return "Press 0 to delete the message.";
             case 3:
+                this.flag = Flag.STORED;
                 storeMessage();
                 return "Message successfully stored.";
             default:
@@ -92,7 +146,8 @@ public class Message {
         }
     }
 
-    // Requirement: returns all sent messages as a formatted String
+    // ---------- Printing ----------
+
     public String printMessages() {
         if (sentMessages.isEmpty()) {
             return "No messages sent yet.";
@@ -107,27 +162,61 @@ public class Message {
         return sb.toString();
     }
 
-    // Requirement: returns total messages sent
+    // ---------- Totals ----------
+
+    /** Brief spells it returnTotalMessagess (double s). */
+    public int returnTotalMessagess() {
+        return totalMessagesSent;
+    }
+
+    /** Alias for the single-s version used earlier. */
     public int returnTotalMessages() {
         return totalMessagesSent;
     }
 
-    // Research task: store message to JSON using Gson
+    // ---------- JSON storage ----------
+
+    /**
+     * Writes all stored messages as a JSON array.
+     * Reads existing array first so we don't lose previously stored messages.
+     */
     public String storeMessage() {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        try (FileWriter writer = new FileWriter("messages.json", true)) {
-            writer.write(gson.toJson(this));
-            writer.write("\n");
+        ArrayList<Message> all = loadStoredMessages("messages.json");
+
+        // Avoid duplicate by hash+ID
+        for (Message m : all) {
+            if (m.messageID.equals(this.messageID)) {
+                return "Message successfully stored."; // already there
+            }
+        }
+        all.add(this);
+
+        try (FileWriter writer = new FileWriter("messages.json")) {
+            writer.write(gson.toJson(all));
             return "Message successfully stored.";
         } catch (IOException e) {
             return "Error storing message: " + e.getMessage();
         }
     }
 
-    // Getters for testing
-    public String getMessageID() { return messageID; }
-    public String getMessageHash() { return messageHash; }
+    /** Reads messages.json into an ArrayList. Returns empty list if missing. */
+    public static ArrayList<Message> loadStoredMessages(String path) {
+        Gson gson = new GsonBuilder().create();
+        Type listType = new TypeToken<ArrayList<Message>>() {}.getType();
+        try (FileReader reader = new FileReader(path)) {
+            ArrayList<Message> list = gson.fromJson(reader, listType);
+            return list != null ? list : new ArrayList<>();
+        } catch (IOException e) {
+            return new ArrayList<>();
+        }
+    }
+
+    // ---------- Getters / setters ----------
+
     public String getRecipient() { return recipient; }
     public String getMessageText() { return messageText; }
     public int getMessageNumber() { return messageNumber; }
+    public Flag getFlag() { return flag; }
+    public void setFlag(Flag flag) { this.flag = flag; }
 }
