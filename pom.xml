@@ -34,5 +34,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>17</maven.compiler.release>
         <exec.mainClass>com.mycompany.prog5121a1.Main</exec.mainClass>
+        <maven.compiler.release>21</maven.compiler.release>
+        <exec.mainClass>com.mycompany.prog5121a1.Prog5121A1</exec.mainClass>
     </properties>
 </project>
